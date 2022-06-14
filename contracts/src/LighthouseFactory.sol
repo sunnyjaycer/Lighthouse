@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import {
+    ISuperfluid,
+    ISuperToken
+} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperAppBase.sol";
+
 import "./Lighthouse.sol";
 
 contract LighthouseFactory {
@@ -62,7 +67,9 @@ contract LighthouseFactory {
         string calldata name,
         string calldata tokenName,
         string calldata tokenSymbol,
-        uint8 tokenDecimals
+        uint8 tokenDecimals,
+        ISuperfluid _host,
+        ISuperToken _superRewardToken
     ) public returns (address) {
         require(nameToAddress[name] == address(0), "NAME TAKEN");
         Lighthouse newLighthouse = new Lighthouse(
@@ -70,7 +77,9 @@ contract LighthouseFactory {
             name,
             tokenName,
             tokenSymbol,
-            tokenDecimals
+            tokenDecimals,
+            _host,
+            _superRewardToken
         );
 
         address newAddress = address(newLighthouse);

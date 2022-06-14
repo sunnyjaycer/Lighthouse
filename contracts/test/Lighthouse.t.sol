@@ -1,26 +1,63 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "forge-std/Test.sol";
+// import "forge-std/Test.sol";
 import "../src/LighthouseFactory.sol";
 import "../src/Lighthouse.sol";
 import "../src/interfaces/IToken.sol";
 
-contract LighthouseTest is Test {
+import {
+    ISuperfluid,
+    ISuperToken
+} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperAppBase.sol";
+
+import {
+    SuperfluidTester,
+    Superfluid,
+    ConstantFlowAgreementV1,
+    CFAv1Library,
+    SuperTokenFactory
+} from "./SuperfluidTester.sol";
+
+import {MySuperToken} from "../src/MySuperToken.sol";
+import {IMySuperToken} from "../src/IMySuperToken.sol";
+
+
+contract LighthouseTest is SuperfluidTester {
     Lighthouse lighthouse;
     address constant alice = address(0xbabe);
     address constant bob = address(0xb0b);
     address constant gasTank = address(0xbaadf00d);
 
     address tokenAddress;
+    IMySuperToken superRewardToken;
+
+    constructor() SuperfluidTester(alice) {} // assumes alice to be an "admin" of some sorts
 
     function setUp() public {
+
+        // Become admin
+        vm.startPrank(alice);
+
+        // Deploy MySuperToken
+        superRewardToken = IMySuperToken(address(new MySuperToken()));
+
+        // Upgrade MySuperToken with the SuperTokenFactory
+        sf.superTokenFactory.initializeCustomSuperToken(address(superRewardToken));
+
+        // initialize MySuperToken
+        superRewardToken.initialize("Super Mega Token", "SMT", 10000e18);
+
+        vm.stopPrank();
+
         lighthouse = new Lighthouse(
             address(this),
             "Uniswap",
             "Uniswap points",
             "UNI",
-            18
+            18,
+            sf.host,
+            ISuperToken(superRewardToken)
         );
         tokenAddress = lighthouse.tokenAddress();
     }
